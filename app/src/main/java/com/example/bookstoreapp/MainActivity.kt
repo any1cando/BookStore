@@ -62,6 +62,7 @@ fun MainScreen() {
     /*** Чтобы остановить слушатель, мы делаем "listener.remove()", когда нам понадобится!
      * Это кушает ресурсы, и слушатель надо останавливать!*/
 
+    // Это колонна
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.SpaceBetween
