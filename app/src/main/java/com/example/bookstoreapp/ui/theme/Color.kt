@@ -11,5 +11,6 @@ val PurpleGrey40 = Color(0xFF625b71)
 val Pink40 = Color(0xFF7D5260)
 
 val BoxFilterColor = Color(0x31008BF5)
-val StatusBarColor = Color(0x94008BF5)
+val StatusBarColor = Color(0xFF003F6F)
 val ButtonColor = Color(0xBF008BF5)
+val GrayLine = Color(0xA3C5C5C5)
