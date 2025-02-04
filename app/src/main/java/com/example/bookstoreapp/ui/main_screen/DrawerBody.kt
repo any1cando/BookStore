@@ -23,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.bookstoreapp.R
+import com.example.bookstoreapp.ui.theme.DrawerBodyColor
 import com.example.bookstoreapp.ui.theme.GrayLine
 
 
@@ -31,8 +32,8 @@ fun DrawerBody() {
     val categoriesList = listOf(
         "Favorites", "Fantasy", "Drama", "Bestsellers"
     )
-    
-    Box(modifier = Modifier.fillMaxSize()) {
+
+    Box(modifier = Modifier.fillMaxSize().background(DrawerBodyColor)) {
         Image(
             modifier = Modifier.fillMaxSize(),
             painter = painterResource(id = R.drawable.books_background),
@@ -52,15 +53,18 @@ fun DrawerBody() {
                 color = Color.White
             )
             Spacer(modifier = Modifier.height(15.dp))
-            Box(modifier = Modifier
-                .fillMaxWidth()
-                .height(2.dp)
-                .background(GrayLine)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(2.dp)
+                    .background(GrayLine)
             )
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 items(categoriesList) { item ->
                     Column(
-                        modifier = Modifier.fillMaxWidth().clickable {  },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { },
                     ) {
                         Spacer(modifier = Modifier.height(15.dp))
                         Text(
@@ -73,10 +77,11 @@ fun DrawerBody() {
                                 .wrapContentWidth()
                         )
                         Spacer(modifier = Modifier.height(15.dp))
-                        Box(modifier = Modifier
-                            .fillMaxWidth()
-                            .height(2.dp)
-                            .background(GrayLine)
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(2.dp)
+                                .background(GrayLine)
                         )
                     }
                 }
