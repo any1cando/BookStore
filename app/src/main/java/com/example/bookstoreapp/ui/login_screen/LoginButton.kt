@@ -1,4 +1,4 @@
-package com.example.bookstoreapp.ui.login
+package com.example.bookstoreapp.ui.login_screen
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Button
@@ -15,7 +15,7 @@ fun LoginButton(
     onClick: () -> Unit
 ) {
     Button(
-        onClick = { onClick },
+        onClick = { onClick() },
         modifier = Modifier.fillMaxWidth(0.5f),
         colors = ButtonDefaults.buttonColors(
             containerColor = ButtonColor

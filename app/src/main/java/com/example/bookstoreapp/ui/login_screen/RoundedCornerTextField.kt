@@ -1,4 +1,4 @@
-package com.example.bookstoreapp.ui.login
+package com.example.bookstoreapp.ui.login_screen
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.fillMaxWidth
