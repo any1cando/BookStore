@@ -27,6 +27,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.bookstoreapp.R
+import com.example.bookstoreapp.ui.login_screen.data.MainScreenDataObject
 import com.example.bookstoreapp.ui.theme.BoxFilterColor
 import com.example.bookstoreapp.ui.theme.ErrorColorBackground
 import com.google.firebase.auth.FirebaseAuth
@@ -35,7 +36,9 @@ import com.google.firebase.ktx.Firebase
 
 
 @Composable
-fun LoginScreen() {
+fun LoginScreen(
+    onNavigateToMainScreen: (MainScreenDataObject) -> Unit
+) {
 
     val auth = remember {
         Firebase.auth
@@ -136,9 +139,9 @@ fun LoginScreen() {
                 auth = auth,
                 email = emailState.value,
                 password = passwordState.value,
-                onSignInSuccess = {
-                    Log.e("MyLog", "Sign In Success!")
+                onSignInSuccess = { navData ->
                     errorState.value = ""
+                    onNavigateToMainScreen(navData)
                 },
                 onSignInFailure = { error ->
                     Log.e("MyLog", "Sign In Failure!")
@@ -147,13 +150,14 @@ fun LoginScreen() {
             )
         }
 
-        LoginButton(text = "Sign Up!",) {
+        LoginButton(text = "Sign Up!") {
             signUp(
                 auth = auth,
                 email = emailState.value,
                 password = passwordState.value,
-                onSignUpSuccess = {
+                onSignUpSuccess = { navData ->
                     errorState.value = ""
+                    onNavigateToMainScreen(navData)
                 },
                 onSignUpFailure = { error ->
                     errorState.value = error
@@ -168,8 +172,9 @@ private fun signIn(
     auth: FirebaseAuth,
     email: String,
     password: String,
-    onSignInSuccess: () -> Unit,
-    onSignInFailure: (String) -> Unit) {
+    onSignInSuccess: (MainScreenDataObject) -> Unit,
+    onSignInFailure: (String) -> Unit
+) {
     if (email.isBlank() || password.isBlank()) {
         onSignInFailure("Email or password can't be empty!")
         return
@@ -177,7 +182,14 @@ private fun signIn(
 
     auth.signInWithEmailAndPassword(email, password)
         .addOnCompleteListener { task ->
-            if (task.isSuccessful) { onSignInSuccess() }
+            if (task.isSuccessful) {
+                onSignInSuccess(
+                    MainScreenDataObject(
+                        uid = task.result.user?.uid!!,
+                        email = task.result.user?.email!!
+                    )
+                )
+            }
         }
         .addOnFailureListener { task ->
             onSignInFailure(task.message ?: "Undefined Sign In Error!")
@@ -189,7 +201,7 @@ private fun signUp(
     auth: FirebaseAuth,
     email: String,
     password: String,
-    onSignUpSuccess: () -> Unit,  // Две функции, которые будут что-то делать. Первая ничего не возвращает и переводит
+    onSignUpSuccess: (MainScreenDataObject) -> Unit,  // Две функции, которые будут что-то делать. Первая ничего не возвращает и переводит
     onSignUpFailure: (String) -> Unit  // на следующий экран, а вторая вернет какую-то строку с ошибкой
 ) {
     if (email.isBlank() || password.isBlank()) {
@@ -198,7 +210,14 @@ private fun signUp(
     }
     auth.createUserWithEmailAndPassword(email, password)
         .addOnCompleteListener { task ->
-            if (task.isSuccessful) { onSignUpSuccess() }
+            if (task.isSuccessful) {
+                onSignUpSuccess(
+                    MainScreenDataObject(
+                        uid = task.result.user?.uid!!,
+                        email = task.result.user?.email!!
+                    )
+                )
+            }
         }
         .addOnFailureListener { task ->
             onSignUpFailure(task.message ?: "Undefined Sign Up Error!")

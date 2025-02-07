@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
     alias(libs.plugins.gms)
+    alias(libs.plugins.serialization)
+    alias(libs.plugins.composeCompiler)
 }
 
 android {
@@ -60,6 +62,9 @@ dependencies {
     implementation(libs.firebase.storage)
     implementation(libs.firebase.auth)
     implementation(libs.coil)
+
+    implementation(libs.navigation.compose)
+    implementation(libs.kotlinx.serialization.json)
 
     runtimeOnly(libs.accomponist)
 
