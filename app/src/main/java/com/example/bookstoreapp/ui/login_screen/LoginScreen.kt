@@ -49,10 +49,10 @@ fun LoginScreen(
     }
 
     val emailState = remember {
-        mutableStateOf("")
+        mutableStateOf("admin@mail.ru")
     }
     val passwordState = remember {
-        mutableStateOf("")
+        mutableStateOf("admin123")
     }
 
 

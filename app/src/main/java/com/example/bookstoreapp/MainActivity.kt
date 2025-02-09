@@ -29,7 +29,7 @@ class MainActivity : ComponentActivity() {
                 // Этот экран будет открываться, когда мы будем отправлять MainScreenDataObject
                 composable<MainScreenDataObject> { navBackStackEntry ->
                     val navData = navBackStackEntry.toRoute<MainScreenDataObject>()
-                    MainScreen()
+                    MainScreen(navData)
                 }
             }
         }

@@ -22,7 +22,7 @@ import com.example.bookstoreapp.ui.theme.StatusBarColor
 
 
 @Composable
-fun DrawerHeader() {
+fun DrawerHeader(email: String) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -42,6 +42,12 @@ fun DrawerHeader() {
             color = Color.White,
             fontSize = 22.sp,
             fontWeight = FontWeight.Bold
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = email,
+            color = Color.Gray,
+            fontSize = 16.sp
         )
     }
 }
