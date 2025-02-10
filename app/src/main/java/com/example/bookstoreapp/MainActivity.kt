@@ -7,6 +7,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import com.example.bookstoreapp.ui.add_book_screen.AddBookScreen
+import com.example.bookstoreapp.ui.add_book_screen.data.AddScreenObject
 import com.example.bookstoreapp.ui.login_screen.LoginScreen
 import com.example.bookstoreapp.ui.login_screen.data.LoginScreenObject
 import com.example.bookstoreapp.ui.login_screen.data.MainScreenDataObject
@@ -18,7 +20,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navController = rememberNavController()
             
-            NavHost(navController = navController, startDestination = LoginScreenObject) {
+            NavHost(navController = navController, startDestination = AddScreenObject) {
 
                 composable<LoginScreenObject> {
                     LoginScreen() { navData ->
@@ -26,10 +28,15 @@ class MainActivity : ComponentActivity() {
 
                     }
                 }
+
                 // Этот экран будет открываться, когда мы будем отправлять MainScreenDataObject
                 composable<MainScreenDataObject> { navBackStackEntry ->
                     val navData = navBackStackEntry.toRoute<MainScreenDataObject>()
                     MainScreen(navData)
+                }
+
+                composable<AddScreenObject> {
+                    AddBookScreen()
                 }
             }
         }

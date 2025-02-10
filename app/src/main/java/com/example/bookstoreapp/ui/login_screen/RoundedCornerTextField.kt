@@ -15,6 +15,8 @@ import com.example.bookstoreapp.ui.theme.ButtonColor
 
 @Composable
 fun RoundedCornerTextField(
+    maxLines: Int = 1,
+    isSingleLine: Boolean = true,
     text: String,
     label: String,
     onValueChange: (String) -> Unit
@@ -31,7 +33,8 @@ fun RoundedCornerTextField(
         ),
         modifier = Modifier.fillMaxWidth().border(2.dp, ButtonColor, RoundedCornerShape(25.dp)),
         label = { Text(text = label, color = Color.Gray) },
-        singleLine = true
+        singleLine = isSingleLine,
+        maxLines = maxLines
     )
 
 }
