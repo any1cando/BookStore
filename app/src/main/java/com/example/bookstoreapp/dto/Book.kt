@@ -1,8 +1,7 @@
 package com.example.bookstoreapp.dto
 
-import java.lang.invoke.TypeDescriptor
-
 data class Book(
+    val key: String = "ExampleOfKey",
     val name: String = "BookName",
     val description: String = "BookDescription",
     val price: String = "BookPrice",

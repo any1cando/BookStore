@@ -20,7 +20,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navController = rememberNavController()
             
-            NavHost(navController = navController, startDestination = AddScreenObject) {
+            NavHost(navController = navController, startDestination = LoginScreenObject) {
 
                 composable<LoginScreenObject> {
                     LoginScreen() { navData ->
@@ -32,11 +32,15 @@ class MainActivity : ComponentActivity() {
                 // Этот экран будет открываться, когда мы будем отправлять MainScreenDataObject
                 composable<MainScreenDataObject> { navBackStackEntry ->
                     val navData = navBackStackEntry.toRoute<MainScreenDataObject>()
-                    MainScreen(navData)
+                    MainScreen(navData) {
+                        navController.navigate(AddScreenObject)
+                    }
                 }
 
                 composable<AddScreenObject> {
-                    AddBookScreen()
+                    AddBookScreen {
+                        navController.popBackStack()
+                    }
                 }
             }
         }

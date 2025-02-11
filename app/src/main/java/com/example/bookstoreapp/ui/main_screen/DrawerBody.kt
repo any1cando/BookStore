@@ -27,7 +27,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.bookstoreapp.R
@@ -40,8 +39,7 @@ import com.google.firebase.ktx.Firebase
 
 
 @Composable
-@Preview
-fun DrawerBody() {
+fun DrawerBody(onAdminClick: () -> Unit) {
     val categoriesList = listOf(
         "Favorites", "Fantasy", "Drama", "Bestsellers"
     )
@@ -116,7 +114,7 @@ fun DrawerBody() {
             if (isAdminState.value) {
                 // Показываем кнопку админа или нет, в зависимости от того, совпал ли uid пользователя
                 Button(
-                    onClick = { },
+                    onClick = { onAdminClick() },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(64.dp),

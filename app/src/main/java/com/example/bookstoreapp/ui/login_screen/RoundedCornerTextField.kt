@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.bookstoreapp.ui.theme.ButtonColor
 
 
@@ -32,7 +33,7 @@ fun RoundedCornerTextField(
             focusedIndicatorColor = Color.Transparent
         ),
         modifier = Modifier.fillMaxWidth().border(2.dp, ButtonColor, RoundedCornerShape(25.dp)),
-        label = { Text(text = label, color = Color.Gray) },
+        label = { Text(text = label, color = Color.Gray, fontSize = 18.sp) },
         singleLine = isSingleLine,
         maxLines = maxLines
     )
