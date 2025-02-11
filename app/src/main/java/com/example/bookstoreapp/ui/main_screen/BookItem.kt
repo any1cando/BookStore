@@ -13,21 +13,20 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.example.bookstoreapp.R
+import com.example.bookstoreapp.dto.Book
 
-@Preview
 @Composable
-fun BookItem() {
+fun BookItem(book: Book) {
     Column(
         modifier = Modifier.fillMaxWidth().padding(16.dp)
     ) {
         AsyncImage(
-            model = R.drawable.test_image,
-            contentDescription = "TestImage",
+            model = book.imageUrl,
+            contentDescription = "Image",
             modifier = Modifier
                 .fillMaxWidth()
                 .height(220.dp)
@@ -36,20 +35,22 @@ fun BookItem() {
         )
         Spacer(modifier = Modifier.height(10.dp))
         Text(
-            text = "Mass Effect",
+            text = book.name,
             color = Color.Black,
             fontWeight = FontWeight.Bold,
             fontSize = 20.sp
         )
         Spacer(modifier = Modifier.height(5.dp))
         Text(
-            text = "Description",
+            text = book.description,
             color = Color.Gray,
-            fontSize = 16.sp
+            fontSize = 16.sp,
+            maxLines = 3,
+            overflow = TextOverflow.Ellipsis
         )
         Spacer(modifier = Modifier.height(5.dp))
         Text(
-            text = "50 dollars",
+            text = book.price,
             color = Color.Blue,
             fontWeight = FontWeight.Bold,
             fontSize = 16.sp
