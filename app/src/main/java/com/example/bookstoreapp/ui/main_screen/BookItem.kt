@@ -1,5 +1,9 @@
 package com.example.bookstoreapp.ui.main_screen
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.util.Base64
+import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -24,8 +28,19 @@ fun BookItem(book: Book) {
     Column(
         modifier = Modifier.fillMaxWidth().padding(16.dp)
     ) {
+
+        var bitMap: Bitmap? = null
+        try {
+            // Превращаем строку из FirebaseFirestore в бит мап, который принимает AsyncImage
+            val base64Image = Base64.decode(book.imageUrl, Base64.DEFAULT)
+            bitMap = BitmapFactory.decodeByteArray(base64Image, 0 ,base64Image.size)
+        }
+        catch (e: IllegalArgumentException) {
+            Log.e("MyLog", e.message.toString())
+        }
+
         AsyncImage(
-            model = book.imageUrl,
+            model = bitMap ?: book.imageUrl,
             contentDescription = "Image",
             modifier = Modifier
                 .fillMaxWidth()

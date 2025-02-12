@@ -1,7 +1,10 @@
 package com.example.bookstoreapp.ui.add_book_screen
 
+import android.content.ContentResolver
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
-import android.util.Log
+import android.util.Base64
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -22,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -36,14 +40,15 @@ import com.example.bookstoreapp.ui.theme.BoxFilterColor
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.ktx.storage
+import java.io.ByteArrayOutputStream
 
 
 @Composable
 fun AddBookScreen(
     onSaved: () -> Unit
 ) {
+    val cv = LocalContext.current.contentResolver
     var selectedCategory: String = "BestSellers"
     val titleBook = remember {
         mutableStateOf("")
@@ -156,70 +161,54 @@ fun AddBookScreen(
         }
 
         LoginButton(text = "Save") {
-            saveBookImage(
-                selectedImageUri.value!!,
-                storage,
+            saveBookToFireStore(
                 fireStore,
                 Book(
                     name = titleBook.value,
                     description = descriptionBook.value,
                     price = priceBook.value,
-                    category = selectedCategory
+                    category = selectedCategory,
+                    imageUrl = imageToBase64(selectedImageUri.value!!, cv)
                 ),
                 onSaved = {
                     onSaved()
                 },
                 onError = {
-                    Log.e("MyLog", "Error during saving book")
-                }
 
+                }
             )
         }
     }
 }
 
-// Сохраняем сначала картинку, так как для сохранения целой книги нам нужно иметь ссылку
-// на эту картинку из storage.
-private fun saveBookImage(
-    uri: Uri,  // Ссылка картинки на телефоне
-    storage: FirebaseStorage,
-    fireStore: FirebaseFirestore,
-    book: Book,
-    onSaved: () -> Unit,
-    onError: () -> Unit
-) {
-    val timeStamp = System.currentTimeMillis()
-    val storageRef = storage
-        .reference
-        .child("book_images")
-        .child("image_$timeStamp.jpg")  // Делаем разное название для картинок, чтобы они не сохранялись в одном месте
-    val uploadTask = storageRef.putFile(uri)
-    uploadTask
-        .addOnSuccessListener {
-            // Ничего не делаем, пока не получим ссылку картинки
-            storageRef.downloadUrl.addOnSuccessListener { url ->  // После получения ссылки - сохранение текстовой части
-                saveBookToFireStore(
-                    fireStore,
-                    url.toString(),
-                    book,
-                    onSaved = {
-                        onSaved()
-                    },
-                    onError = {
-                        onError()
-                    }
-                )
-            }
-        }
-        .addOnFailureListener {
-            Log.e("MyLog", "Error during saving image to storage")
-        }
+private fun imageToBase64(
+    uri: Uri,
+    contentResolver: ContentResolver
+): String {
+    val compressBytes = compressImage(uri, contentResolver)
+    return Base64.encodeToString(compressBytes, Base64.DEFAULT)
+}
+
+
+// Функция, которая режет качество, чтобы картинка уместилась в виде строки в FirebaseFirestore
+private fun compressImage(uri: Uri, contentResolver: ContentResolver, maxSizeKb: Int = 800): ByteArray {
+    val inputStream = contentResolver.openInputStream(uri)
+    val bitmap = BitmapFactory.decodeStream(inputStream)
+    var quality = 100
+    var byteArrayOutputStream = ByteArrayOutputStream()
+
+    do {
+        byteArrayOutputStream.reset()
+        bitmap.compress(Bitmap.CompressFormat.JPEG, quality, byteArrayOutputStream)
+        quality -= 5
+    } while (byteArrayOutputStream.toByteArray().size / 1024 > maxSizeKb && quality > 10)
+
+    return byteArrayOutputStream.toByteArray()
 }
 
 
 private fun saveBookToFireStore(
     fireStore: FirebaseFirestore,
-    url: String,
     book: Book,
     onSaved: () -> Unit,
     onError: () -> Unit
@@ -228,9 +217,7 @@ private fun saveBookToFireStore(
     val key = db.document().id
     db.document(key)
         .set(
-            book.copy(
-                key = key, imageUrl = url
-            )
+            book.copy(key = key)
         )
         .addOnSuccessListener {
             onSaved()
