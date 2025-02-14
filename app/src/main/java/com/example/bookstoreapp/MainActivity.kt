@@ -19,7 +19,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             val navController = rememberNavController()
-            
+
             NavHost(navController = navController, startDestination = LoginScreenObject) {
 
                 composable<LoginScreenObject> {
@@ -32,12 +32,27 @@ class MainActivity : ComponentActivity() {
                 // Этот экран будет открываться, когда мы будем отправлять MainScreenDataObject
                 composable<MainScreenDataObject> { navBackStackEntry ->
                     val navData = navBackStackEntry.toRoute<MainScreenDataObject>()
-                    MainScreen(navData) {
-                        navController.navigate(AddScreenObject)
-                    }
+                    MainScreen(
+                        navData,
+                        onEditBookClick = { clickedBook ->
+                            navController.navigate(
+                                AddScreenObject(
+                                    key = clickedBook.key,
+                                    name = clickedBook.name,
+                                    description = clickedBook.description,
+                                    price = clickedBook.price,
+                                    category = clickedBook.category,
+                                    imageUrl = clickedBook.imageUrl
+                                )
+                            )
+                        },
+                        onAdminClick = {
+                            navController.navigate(AddScreenObject())
+                        })
                 }
 
-                composable<AddScreenObject> {
+                composable<AddScreenObject> { navEntry ->
+                    val navData = navEntry.toRoute<AddScreenObject>()
                     AddBookScreen {
                         navController.popBackStack()
                     }

@@ -39,7 +39,10 @@ import com.google.firebase.ktx.Firebase
 
 
 @Composable
-fun DrawerBody(onAdminClick: () -> Unit) {
+fun DrawerBody(
+    onAdmin: (Boolean) -> Unit = {},  // Функция для проверки на админа - кнопки редактирования
+    onAdminClick: () -> Unit = {}  // Функция для проверки на админа - кнопка добавления книги
+) {
     val categoriesList = listOf(
         "Favorites", "Fantasy", "Drama", "Bestsellers"
     )
@@ -51,6 +54,7 @@ fun DrawerBody(onAdminClick: () -> Unit) {
     LaunchedEffect(Unit) {
         isAdmin { adminState ->
             isAdminState.value = adminState
+            onAdmin(adminState)
         }
     }
 

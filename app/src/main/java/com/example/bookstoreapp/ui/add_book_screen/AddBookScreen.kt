@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.example.bookstoreapp.R
 import com.example.bookstoreapp.dto.Book
+import com.example.bookstoreapp.ui.add_book_screen.data.AddScreenObject
 import com.example.bookstoreapp.ui.login_screen.LoginButton
 import com.example.bookstoreapp.ui.login_screen.RoundedCornerTextField
 import com.example.bookstoreapp.ui.theme.BoxFilterColor
@@ -46,18 +47,19 @@ import java.io.ByteArrayOutputStream
 
 @Composable
 fun AddBookScreen(
+    navData: AddScreenObject = AddScreenObject(),  //  Изначально приходят пустые данные
     onSaved: () -> Unit
 ) {
     val cv = LocalContext.current.contentResolver
-    var selectedCategory: String = "BestSellers"
+    var selectedCategory = navData.category
     val titleBook = remember {
-        mutableStateOf("")
+        mutableStateOf(navData.name)
     }
     val descriptionBook = remember {
-        mutableStateOf("")
+        mutableStateOf(navData.description)
     }
     val priceBook = remember {
-        mutableStateOf("")
+        mutableStateOf(navData.price)
     }
     val selectedImageUri = remember {
         mutableStateOf<Uri?>(null)
