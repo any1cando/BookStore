@@ -22,6 +22,7 @@ import com.example.bookstoreapp.ui.theme.ButtonColor
 
 @Composable
 fun RoundedCornerDropDownMenu(
+    startCategory: String,
     onOptionSelected: (String) -> Unit
 ) {
     // Флаг, открыто нижнее меню или нет
@@ -30,7 +31,7 @@ fun RoundedCornerDropDownMenu(
     }
     // Выбранная категория (по умолчанию - бестселлер)
     val selectedOption = remember {
-        mutableStateOf("Bestsellers")
+        mutableStateOf(startCategory)
     }
     val categoriesList = listOf("Fantasy", "Drama", "Bestsellers")
 

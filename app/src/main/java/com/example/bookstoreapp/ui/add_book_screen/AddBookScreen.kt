@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Base64
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -34,7 +35,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.example.bookstoreapp.R
 import com.example.bookstoreapp.dto.Book
-import com.example.bookstoreapp.ui.add_book_screen.data.AddScreenObject
+import com.example.bookstoreapp.ui.add_book_screen.viewmodel.BookViewModel
 import com.example.bookstoreapp.ui.login_screen.LoginButton
 import com.example.bookstoreapp.ui.login_screen.RoundedCornerTextField
 import com.example.bookstoreapp.ui.theme.BoxFilterColor
@@ -47,23 +48,44 @@ import java.io.ByteArrayOutputStream
 
 @Composable
 fun AddBookScreen(
-    navData: AddScreenObject = AddScreenObject(),  //  Изначально приходят пустые данные
-    onSaved: () -> Unit
-) {
+    bookViewModel: BookViewModel,
+    onSaved: () -> Unit) {
+    val book = bookViewModel.currentBook.value
+
     val cv = LocalContext.current.contentResolver
-    var selectedCategory = navData.category
+
+    val selectedCategory = remember {
+        mutableStateOf(book?.category ?: "")
+    }
+
     val titleBook = remember {
-        mutableStateOf(navData.name)
+        mutableStateOf(book?.name ?: "")
     }
     val descriptionBook = remember {
-        mutableStateOf(navData.description)
+        mutableStateOf(book?.description ?: "")
     }
     val priceBook = remember {
-        mutableStateOf(navData.price)
+        mutableStateOf(book?.price ?: "")
     }
     val selectedImageUri = remember {
         mutableStateOf<Uri?>(null)
     }
+
+    var imageBitMap = remember {
+        var bitMap: Bitmap? = null
+        try {
+            if (!book?.imageUrl.isNullOrEmpty()) {
+                val base64Image = Base64.decode(book!!.imageUrl, Base64.DEFAULT)
+                bitMap = BitmapFactory.decodeByteArray(base64Image, 0, base64Image.size)
+            } else {
+                Log.e("MyLog", "Ошибка: imageUrl пустой или null")
+            }
+        } catch (e: IllegalArgumentException) {
+            Log.e("MyLog", "Ошибка декодирования Base64: ${e.message}")
+        }
+        mutableStateOf(bitMap)
+    }
+
 
     val fireStore = remember {
         Firebase.firestore
@@ -76,13 +98,14 @@ fun AddBookScreen(
     val imageLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
+        imageBitMap.value = null
         selectedImageUri.value = uri
 
     }
 
     // Задний фон
     Image(
-        painter = rememberAsyncImagePainter(model = selectedImageUri.value),
+        painter = rememberAsyncImagePainter(model = imageBitMap.value ?: selectedImageUri.value),
         contentDescription = "Background",
         modifier = Modifier.fillMaxSize(),
         contentScale = ContentScale.Crop,
@@ -124,8 +147,9 @@ fun AddBookScreen(
 
         Spacer(modifier = Modifier.height(15.dp))
 
-        RoundedCornerDropDownMenu { selectedItem ->
-            selectedCategory = selectedItem
+        // Передаем по умолчанию в категорию то, что лежит в бд
+        RoundedCornerDropDownMenu(selectedCategory.value) { selectedItem ->
+            selectedCategory.value = selectedItem
         }
 
         Spacer(modifier = Modifier.height(15.dp))
@@ -166,11 +190,14 @@ fun AddBookScreen(
             saveBookToFireStore(
                 fireStore,
                 Book(
+                    key = bookViewModel.currentBook.value?.key ?: "",
                     name = titleBook.value,
                     description = descriptionBook.value,
                     price = priceBook.value,
-                    category = selectedCategory,
-                    imageUrl = imageToBase64(selectedImageUri.value!!, cv)
+                    category = selectedCategory.value,
+                    imageUrl = if (selectedImageUri.value != null) {
+                        imageToBase64(selectedImageUri.value!!, cv)
+                    } else { bookViewModel.currentBook.value?.imageUrl ?: "" }
                 ),
                 onSaved = {
                     onSaved()
@@ -216,7 +243,7 @@ private fun saveBookToFireStore(
     onError: () -> Unit
 ) {
     val db = fireStore.collection("books")
-    val key = db.document().id
+    val key = book.key.ifEmpty { db.document().id }
     db.document(key)
         .set(
             book.copy(key = key)
