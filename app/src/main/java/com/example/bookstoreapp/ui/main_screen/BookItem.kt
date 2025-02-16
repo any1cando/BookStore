@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -30,7 +32,11 @@ import coil.compose.AsyncImage
 import com.example.bookstoreapp.dto.Book
 
 @Composable
-fun BookItem(showEditButton: Boolean = false, book: Book, onEditClick: (Book) -> Unit) {
+fun BookItem(
+    showEditButton: Boolean = false,
+    book: Book,
+    onEditClick: (Book) -> Unit,
+    onFavoriteClick: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -91,6 +97,12 @@ fun BookItem(showEditButton: Boolean = false, book: Book, onEditClick: (Book) ->
                 }) {
                     Icon(Icons.Default.Edit, contentDescription = "Edit Button")
                 }
+            }
+            IconButton(onClick = {
+                onFavoriteClick()
+            }) {
+                if (book.isFavorite) Icon(Icons.Default.Favorite, contentDescription = "")
+                else Icon(Icons.Default.FavoriteBorder, contentDescription = "")
             }
         }
     }

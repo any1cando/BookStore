@@ -19,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import com.example.bookstoreapp.dto.Book
+import com.example.bookstoreapp.dto.Favorite
 import com.example.bookstoreapp.ui.login_screen.data.MainScreenDataObject
 import com.example.bookstoreapp.ui.main_screen.bottom_menu.BottomMenu
 import com.google.firebase.firestore.FirebaseFirestore
@@ -43,10 +44,19 @@ fun MainScreen(
         mutableStateOf(false)
     }
 
+    val db = remember {
+        Firebase.firestore
+    }
+
     LaunchedEffect(Unit) {
-        val db = Firebase.firestore
-        getAllBooks(db) { books ->
-            booksListState.value = books
+        getAllFavoritesIds(db, navData.uid) { favorites ->
+            getAllBooks(
+                db,
+                favorites,
+                onBooks = { books ->
+                    booksListState.value = books
+                }
+            )
         }
     }
 
@@ -83,29 +93,101 @@ fun MainScreen(
                 items(booksListState.value) { book ->
                     BookItem(
                         showEditButton = isAdminState.value,
-                        book
-                    ) { clickedBook ->
-                        onEditBookClick(clickedBook)
-                    }
+                        book = book,
+                        onEditClick = { clickedBook ->
+                            onEditBookClick(clickedBook)
+                        },
+                        onFavoriteClick = {
+                            // С помощью map перебирем изначальный список и делаем изменения на сердечко с проверкой
+                            booksListState.value = booksListState.value.map { clickedBook ->
+                                if (clickedBook.key == book.key) {
+                                    onFavorites(
+                                        db,
+                                        navData.uid,
+                                        Favorite(clickedBook.key),  // Берем ключ нажатой книги
+                                        !clickedBook.isFavorite
+                                    )
+                                    clickedBook.copy(isFavorite = !clickedBook.isFavorite)
+                                }
+                                // Иначе, верни ту же книгу
+                                else clickedBook
+                            }
+                        }
+                    )
                 }
             }
         }
     }
 }
 
+
+private fun onFavorites(
+    db: FirebaseFirestore,
+    uid: String,
+    favorite: Favorite,  // тут будет идентификатор книги, который мы добавили
+    isFavorite: Boolean,
+) {
+    if (isFavorite) {
+        db
+            .collection("users")
+            .document(uid)
+            .collection("favorites")
+            .document(favorite.key).set(favorite)
+    } else {
+        db
+            .collection("users")
+            .document(uid)
+            .collection("favorites")
+            .document(favorite.key).delete()
+    }
+}
+
+
 private fun getAllBooks(
     db: FirebaseFirestore,
+    favoritesList: List<String>,
     onBooks: (List<Book>) -> Unit  // Вернет список книг
 ) {
     db
         .collection("books")
         .get()
         .addOnSuccessListener { task ->
-            val books = task.toObjects(Book::class.java)
+            val books = task.toObjects(Book::class.java).map { book ->
+                if (favoritesList.contains(book.key)) {
+                    book.copy(isFavorite = true)
+                } else {
+                    book
+                }
+            }
             onBooks(books)
 
         }
         .addOnFailureListener {
             Log.e("MyLog", "Error during getting books: $it")
+        }
+}
+
+
+private fun getAllFavoritesIds(
+    db: FirebaseFirestore,
+    uid: String,
+    onFavorites: (List<String>) -> Unit  // Вернет список книг
+) {
+    db
+        .collection("users")
+        .document(uid)
+        .collection("favorites")
+        .get()
+        .addOnSuccessListener { task ->
+            val favorites = task.toObjects(Favorite::class.java)
+            val keyList = arrayListOf<String>()
+            favorites.forEach {
+                keyList.add(it.key)
+            }
+            onFavorites(keyList)
+
+        }
+        .addOnFailureListener {
+            Log.e("MyLog", "Error during getting favorites: $it")
         }
 }
