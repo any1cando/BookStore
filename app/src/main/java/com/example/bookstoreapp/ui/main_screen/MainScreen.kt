@@ -22,6 +22,7 @@ import com.example.bookstoreapp.dto.Book
 import com.example.bookstoreapp.dto.Favorite
 import com.example.bookstoreapp.ui.login_screen.data.MainScreenDataObject
 import com.example.bookstoreapp.ui.main_screen.bottom_menu.BottomMenu
+import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -69,19 +70,56 @@ fun MainScreen(
                 DrawerBody(
                     onAdmin = { adminState ->
                         isAdminState.value = adminState
+                    },
+                    onFavoritesClick = {
+                        getAllFavoritesIds(db, navData.uid) { favorites ->
+                            getAllFavoritesBooks(
+                                db,
+                                favorites,
+                                onBooks = { books ->
+                                    booksListState.value = books
+                                }
+                            )
+                        }
+                    },
+                    onAdminClick = {
+                        coroutineScope.launch {
+                            drawerState.close()
+                        }
+                        onAdminClick()
                     }
-                ) {
-                    coroutineScope.launch {
-                        drawerState.close()
-                    }
-                    onAdminClick()
-                }
+                )
             }
         }
     ) {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
-            bottomBar = { BottomMenu() }
+            bottomBar = {
+                BottomMenu(
+                    onHomeClick = {
+                        getAllFavoritesIds(db, navData.uid) { favorites ->
+                            getAllBooks(
+                                db,
+                                favorites,
+                                onBooks = { books ->
+                                    booksListState.value = books
+                                }
+                            )
+                        }
+                    },
+                    onFavoritesClick = {
+                        getAllFavoritesIds(db, navData.uid) { favorites ->
+                            getAllFavoritesBooks(
+                                db,
+                                favorites,
+                                onBooks = { books ->
+                                    booksListState.value = books
+                                }
+                            )
+                        }
+                    }
+                )
+            }
         ) { paddingValues ->  // Отступы, чтобы боттом бар не перекрывал наши книги
             // Заполняем основной экран книгами
             LazyVerticalGrid(
@@ -160,6 +198,33 @@ private fun getAllBooks(
                 }
             }
             onBooks(books)
+
+        }
+        .addOnFailureListener {
+            Log.e("MyLog", "Error during getting books: $it")
+        }
+}
+
+
+private fun getAllFavoritesBooks(
+    db: FirebaseFirestore,
+    idsList: List<String>,
+    onBooks: (List<Book>) -> Unit  // Вернет список книг
+) {
+    db
+        .collection("books")
+        // Получи все книги, учитывая мой список с избранными книгами (их ключами)
+        .whereIn(FieldPath.documentId(), idsList)
+        .get()
+        .addOnSuccessListener { task ->
+            val favoritesBooks = task.toObjects(Book::class.java).map { book ->
+                if (idsList.contains(book.key)) {
+                    book.copy(isFavorite = true)
+                } else {
+                    book
+                }
+            }
+            onBooks(favoritesBooks)
 
         }
         .addOnFailureListener {

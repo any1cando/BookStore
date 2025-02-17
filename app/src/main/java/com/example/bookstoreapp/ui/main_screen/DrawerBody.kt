@@ -40,8 +40,9 @@ import com.google.firebase.ktx.Firebase
 
 @Composable
 fun DrawerBody(
-    onAdmin: (Boolean) -> Unit = {},  // Функция для проверки на админа - кнопки редактирования
-    onAdminClick: () -> Unit = {}  // Функция для проверки на админа - кнопка добавления книги
+    onAdmin: (Boolean) -> Unit,  // Функция для проверки на админа - кнопки редактирования
+    onAdminClick: () -> Unit,  // Функция для проверки на админа - кнопка добавления книги
+    onFavoritesClick: () -> Unit
 ) {
     val categoriesList = listOf(
         "Favorites", "Fantasy", "Drama", "Bestsellers"
@@ -93,7 +94,9 @@ fun DrawerBody(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { },
+                            .clickable {
+                                onFavoritesClick()
+                            },
                     ) {
                         Spacer(modifier = Modifier.height(15.dp))
                         Text(
@@ -145,7 +148,8 @@ fun isAdmin(onAdmin: (Boolean) -> Unit) {
     Firebase.firestore
         .collection("admin")
         .document(currentUid)
-        .get().addOnSuccessListener { adminFirebaseDocumentState -> // эта лямбда - документ в коллекции admin на Firebase Database
+        .get()
+        .addOnSuccessListener { adminFirebaseDocumentState -> // эта лямбда - документ в коллекции admin на Firebase Database
             onAdmin(adminFirebaseDocumentState.get("isAdmin") as Boolean)
         }
 }
