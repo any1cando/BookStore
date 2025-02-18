@@ -42,7 +42,8 @@ import com.google.firebase.ktx.Firebase
 fun DrawerBody(
     onAdmin: (Boolean) -> Unit,  // Функция для проверки на админа - кнопки редактирования
     onAdminClick: () -> Unit,  // Функция для проверки на админа - кнопка добавления книги
-    onFavoritesClick: () -> Unit
+    onFavoritesClick: () -> Unit,
+    onCategoryClick: (String) -> Unit
 ) {
     val categoriesList = listOf(
         "Favorites", "Fantasy", "Drama", "Bestsellers"
@@ -90,17 +91,18 @@ fun DrawerBody(
                     .background(GrayLine)
             )
             LazyColumn(modifier = Modifier.fillMaxWidth()) {
-                items(categoriesList) { item ->
+                items(categoriesList) { category ->
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                onFavoritesClick()
+                                if (categoriesList[0] == category) onFavoritesClick()
+                                else onCategoryClick(category)
                             },
                     ) {
                         Spacer(modifier = Modifier.height(15.dp))
                         Text(
-                            text = item,
+                            text = category,
                             color = Color.White,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,

@@ -49,11 +49,16 @@ fun MainScreen(
         Firebase.firestore
     }
 
+    val categoryFromClickToHome = remember {
+        mutableStateOf("Drama")
+    }
+
     LaunchedEffect(Unit) {
         getAllFavoritesIds(db, navData.uid) { favorites ->
             getAllBooks(
                 db,
                 favorites,
+                category = categoryFromClickToHome.value,  // По умолчанию будут открываться книги BestSellers
                 onBooks = { books ->
                     booksListState.value = books
                 }
@@ -87,6 +92,19 @@ fun MainScreen(
                             drawerState.close()
                         }
                         onAdminClick()
+                    },
+                    onCategoryClick = { category ->
+                        categoryFromClickToHome.value = category
+                        getAllFavoritesIds(db, navData.uid) { favorites ->
+                            getAllBooks(
+                                db,
+                                favorites,
+                                category,
+                                onBooks = { books ->
+                                    booksListState.value = books
+                                }
+                            )
+                        }
                     }
                 )
             }
@@ -101,6 +119,7 @@ fun MainScreen(
                             getAllBooks(
                                 db,
                                 favorites,
+                                category = categoryFromClickToHome.value,  // Когда нажимаем на кнопку Home, возвращаемся к BestSellers
                                 onBooks = { books ->
                                     booksListState.value = books
                                 }
@@ -184,10 +203,12 @@ private fun onFavorites(
 private fun getAllBooks(
     db: FirebaseFirestore,
     favoritesList: List<String>,
+    category: String,
     onBooks: (List<Book>) -> Unit  // Вернет список книг
 ) {
     db
         .collection("books")
+        .whereEqualTo("category", category)  // Фильтрует по определенной категории
         .get()
         .addOnSuccessListener { task ->
             val books = task.toObjects(Book::class.java).map { book ->
