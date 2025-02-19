@@ -22,6 +22,7 @@ import com.example.bookstoreapp.dto.Book
 import com.example.bookstoreapp.dto.Favorite
 import com.example.bookstoreapp.ui.login_screen.data.MainScreenDataObject
 import com.example.bookstoreapp.ui.main_screen.bottom_menu.BottomMenu
+import com.example.bookstoreapp.ui.main_screen.bottom_menu.BottomMenuItem
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
@@ -41,6 +42,7 @@ fun MainScreen(
     val booksListState = remember {
         mutableStateOf(emptyList<Book>())
     }
+
     val isAdminState = remember {
         mutableStateOf(false)
     }
@@ -53,16 +55,16 @@ fun MainScreen(
         mutableStateOf("Drama")
     }
 
+    val selectedBottomItemState = remember {
+        mutableStateOf(BottomMenuItem.Home.title)
+    }
+
     LaunchedEffect(Unit) {
         getAllFavoritesIds(db, navData.uid) { favorites ->
-            getAllBooks(
-                db,
-                favorites,
-                category = categoryFromClickToHome.value,  // По умолчанию будут открываться книги BestSellers
-                onBooks = { books ->
-                    booksListState.value = books
-                }
-            )
+            getAllBooks(db, favorites) { books ->
+                booksListState.value = books
+
+            }
         }
     }
 
@@ -77,6 +79,7 @@ fun MainScreen(
                         isAdminState.value = adminState
                     },
                     onFavoritesClick = {
+                        selectedBottomItemState.value = BottomMenuItem.Favorites.title
                         getAllFavoritesIds(db, navData.uid) { favorites ->
                             getAllFavoritesBooks(
                                 db,
@@ -96,10 +99,24 @@ fun MainScreen(
                     onCategoryClick = { category ->
                         categoryFromClickToHome.value = category
                         getAllFavoritesIds(db, navData.uid) { favorites ->
-                            getAllBooks(
+                            getAllBooksFromCategory(
                                 db,
                                 favorites,
                                 category,
+                                onBooks = { books ->
+                                    booksListState.value = books
+                                }
+                            )
+                        }
+                        coroutineScope.launch {
+                            drawerState.close()
+                        }
+                    },
+                    onAllCategories = {
+                        getAllFavoritesIds(db, navData.uid) { favorites ->
+                            getAllBooks(
+                                db,
+                                favorites,
                                 onBooks = { books ->
                                     booksListState.value = books
                                 }
@@ -114,19 +131,17 @@ fun MainScreen(
             modifier = Modifier.fillMaxSize(),
             bottomBar = {
                 BottomMenu(
+                    selectedBottomItemState.value,
                     onHomeClick = {
+                        selectedBottomItemState.value = BottomMenuItem.Home.title
                         getAllFavoritesIds(db, navData.uid) { favorites ->
-                            getAllBooks(
-                                db,
-                                favorites,
-                                category = categoryFromClickToHome.value,  // Когда нажимаем на кнопку Home, возвращаемся к BestSellers
-                                onBooks = { books ->
-                                    booksListState.value = books
-                                }
-                            )
+                            getAllBooks(db, favorites) { books ->
+                                booksListState.value = books
+                            }
                         }
                     },
                     onFavoritesClick = {
+                        selectedBottomItemState.value = BottomMenuItem.Favorites.title
                         getAllFavoritesIds(db, navData.uid) { favorites ->
                             getAllFavoritesBooks(
                                 db,
@@ -169,6 +184,12 @@ fun MainScreen(
                                 // Иначе, верни ту же книгу
                                 else clickedBook
                             }
+                            // Добавятся в список только избранные элементы (у которых сердечко)
+                            if (selectedBottomItemState.value == BottomMenuItem.Favorites.title) {
+                                booksListState.value = booksListState.value.filter { book ->
+                                    book.isFavorite
+                                }
+                            }
                         }
                     )
                 }
@@ -200,7 +221,7 @@ private fun onFavorites(
 }
 
 
-private fun getAllBooks(
+private fun getAllBooksFromCategory(
     db: FirebaseFirestore,
     favoritesList: List<String>,
     category: String,
@@ -209,6 +230,31 @@ private fun getAllBooks(
     db
         .collection("books")
         .whereEqualTo("category", category)  // Фильтрует по определенной категории
+        .get()
+        .addOnSuccessListener { task ->
+            val books = task.toObjects(Book::class.java).map { book ->
+                if (favoritesList.contains(book.key)) {
+                    book.copy(isFavorite = true)
+                } else {
+                    book
+                }
+            }
+            onBooks(books)
+
+        }
+        .addOnFailureListener {
+            Log.e("MyLog", "Error during getting books: $it")
+        }
+}
+
+
+private fun getAllBooks(
+    db: FirebaseFirestore,
+    favoritesList: List<String>,
+    onBooks: (List<Book>) -> Unit  // Вернет список книг
+) {
+    db
+        .collection("books")
         .get()
         .addOnSuccessListener { task ->
             val books = task.toObjects(Book::class.java).map { book ->

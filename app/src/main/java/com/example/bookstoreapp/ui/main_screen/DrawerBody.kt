@@ -43,10 +43,11 @@ fun DrawerBody(
     onAdmin: (Boolean) -> Unit,  // Функция для проверки на админа - кнопки редактирования
     onAdminClick: () -> Unit,  // Функция для проверки на админа - кнопка добавления книги
     onFavoritesClick: () -> Unit,
-    onCategoryClick: (String) -> Unit
+    onCategoryClick: (String) -> Unit,
+    onAllCategories: () -> Unit
 ) {
     val categoriesList = listOf(
-        "Favorites", "Fantasy", "Drama", "Bestsellers"
+        "Favorites", "All", "Fantasy", "Drama", "Bestsellers"
     )
     val isAdminState = remember {
         mutableStateOf(false)
@@ -97,6 +98,7 @@ fun DrawerBody(
                             .fillMaxWidth()
                             .clickable {
                                 if (categoriesList[0] == category) onFavoritesClick()
+                                else if (categoriesList[1] == category) onAllCategories()
                                 else onCategoryClick(category)
                             },
                     ) {
