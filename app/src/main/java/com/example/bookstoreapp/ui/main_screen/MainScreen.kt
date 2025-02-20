@@ -1,6 +1,7 @@
 package com.example.bookstoreapp.ui.main_screen
 
 import android.util.Log
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,13 +12,16 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import com.example.bookstoreapp.dto.Book
 import com.example.bookstoreapp.dto.Favorite
 import com.example.bookstoreapp.ui.login_screen.data.MainScreenDataObject
@@ -59,9 +63,14 @@ fun MainScreen(
         mutableStateOf(BottomMenuItem.Home.title)
     }
 
+    val isFavoritesListEmpty = remember {
+        mutableStateOf(false)
+    }
+
     LaunchedEffect(Unit) {
         getAllFavoritesIds(db, navData.uid) { favorites ->
             getAllBooks(db, favorites) { books ->
+                isFavoritesListEmpty.value = books.isEmpty()
                 booksListState.value = books
 
             }
@@ -85,6 +94,7 @@ fun MainScreen(
                                 db,
                                 favorites,
                                 onBooks = { books ->
+                                    isFavoritesListEmpty.value = books.isEmpty()
                                     booksListState.value = books
                                 }
                             )
@@ -136,6 +146,7 @@ fun MainScreen(
                         selectedBottomItemState.value = BottomMenuItem.Home.title
                         getAllFavoritesIds(db, navData.uid) { favorites ->
                             getAllBooks(db, favorites) { books ->
+                                isFavoritesListEmpty.value = books.isEmpty()
                                 booksListState.value = books
                             }
                         }
@@ -147,6 +158,7 @@ fun MainScreen(
                                 db,
                                 favorites,
                                 onBooks = { books ->
+                                    isFavoritesListEmpty.value = books.isEmpty()
                                     booksListState.value = books
                                 }
                             )
@@ -156,6 +168,16 @@ fun MainScreen(
             }
         ) { paddingValues ->  // Отступы, чтобы боттом бар не перекрывал наши книги
             // Заполняем основной экран книгами
+
+            if (isFavoritesListEmpty.value) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(
+                        text = "Empty List",
+                        color = Color.LightGray
+                    )
+                }
+            }
+
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
                 modifier = Modifier
@@ -278,25 +300,29 @@ private fun getAllFavoritesBooks(
     idsList: List<String>,
     onBooks: (List<Book>) -> Unit  // Вернет список книг
 ) {
-    db
-        .collection("books")
-        // Получи все книги, учитывая мой список с избранными книгами (их ключами)
-        .whereIn(FieldPath.documentId(), idsList)
-        .get()
-        .addOnSuccessListener { task ->
-            val favoritesBooks = task.toObjects(Book::class.java).map { book ->
-                if (idsList.contains(book.key)) {
-                    book.copy(isFavorite = true)
-                } else {
-                    book
+    if (idsList.isNotEmpty()) {
+        db
+            .collection("books")
+            // Получи все книги, учитывая мой список с избранными книгами (их ключами)
+            .whereIn(FieldPath.documentId(), idsList)
+            .get()
+            .addOnSuccessListener { task ->
+                val favoritesBooks = task.toObjects(Book::class.java).map { book ->
+                    if (idsList.contains(book.key)) {
+                        book.copy(isFavorite = true)
+                    } else {
+                        book
+                    }
                 }
-            }
-            onBooks(favoritesBooks)
+                onBooks(favoritesBooks)
 
-        }
-        .addOnFailureListener {
-            Log.e("MyLog", "Error during getting books: $it")
-        }
+            }
+            .addOnFailureListener {
+                Log.e("MyLog", "Error during getting books: $it")
+            }
+    } else {
+        onBooks(emptyList())
+    }
 }
 
 
